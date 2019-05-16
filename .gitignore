@@ -1,0 +1,13 @@
+.vscode
+build
+dist
+*.egg-info
+*.egg/
+*.pyc
+*.swp
+
+.tox
+.coverage
+html/*
+.mypy_cache/*
+notes.rst
