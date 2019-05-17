@@ -1,9 +1,8 @@
 from abc import ABC
 from typing import TYPE_CHECKING
 
-from aiohttp import ClientSession
-
-from .types import JsonDict
+from .types import DockerJSONResponse
+from .utils import api_get
 
 if TYPE_CHECKING:
     from .client import DockerClient
@@ -26,10 +25,8 @@ class SystemAPI(SystemAPIBase):
         super().__init__(client)
         self._baseuri = "http://1.25"
 
-    async def version(self) -> JsonDict:
-        async with ClientSession(connector=self._client.conn) as session:
-            async with session.get("%s/version" % (self._baseuri)) as resp:
-                if resp.status == 200:
-                    return await resp.json()
-                else:
-                    raise Exception(await resp.json())
+    async def version(self) -> DockerJSONResponse:
+        """
+        Retrieve Docker version information.
+        """
+        return await api_get(self._client, "%s/version" % self._baseuri)

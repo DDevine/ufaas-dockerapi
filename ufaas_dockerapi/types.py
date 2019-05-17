@@ -1,7 +1,10 @@
 # flake8: noqa
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 
 JsonDict = Dict[str, Any]  # Apparently this is what Guido uses...
+
+# Docker sometimes returns streamed JSON.
+DockerJSONResponse = Union[List[JsonDict], JsonDict]
 
 from .container import ContainerAPIBase
 from .exec import ExecAPIBase

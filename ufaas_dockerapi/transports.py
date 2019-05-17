@@ -15,4 +15,6 @@ class DockerSock(TransportBase):
     """
     def __init__(self, path: str = "/var/run/docker.sock") -> None:
         self._socket_path = path
-        self._conn: BaseConnector = UnixConnector(path=path)
+
+    def create_connection(self) -> BaseConnector:
+        return UnixConnector(path=self._socket_path)

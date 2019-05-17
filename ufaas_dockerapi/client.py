@@ -32,7 +32,7 @@ class DockerClient:
         Helper that returns the aiohttp connection object for the transport
         in use.
         """
-        return self._transport._conn
+        return self._transport.create_connection()
 
     @property
     def container(self) -> ContainerAPIType:
