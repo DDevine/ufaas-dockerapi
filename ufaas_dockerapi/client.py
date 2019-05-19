@@ -1,9 +1,9 @@
 from typing import Optional, TYPE_CHECKING, Tuple
 
-from .config import AuthConfig
-from .transports import DockerSock
-from .types import (ContainerAPIType, ExecAPIType, ImageAPIType, SystemAPIType,
-                    TransportType)
+from ufaas_dockerapi.config import AuthConfig
+from ufaas_dockerapi.transports import DockerSock
+from ufaas_dockerapi.types import (ContainerAPIType, ExecAPIType, ImageAPIType,
+                                   SystemAPIType, TransportType)
 
 if TYPE_CHECKING:
     from aiohttp import BaseConnector

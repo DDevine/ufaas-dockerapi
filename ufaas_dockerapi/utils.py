@@ -3,32 +3,33 @@ from typing import List, Optional, TYPE_CHECKING
 
 from aiohttp import ClientSession
 
-from .types import DockerJSONResponse, JsonDict
+from ufaas_dockerapi.types import DockerJSONResponse, JsonDict
 
 if TYPE_CHECKING:
-    from .client import DockerClient
+    from ufaas_dockerapi.client import DockerClient
 
 
 async def api_call(client: 'DockerClient', method: str, uri: str,
-                   params: Optional[JsonDict] = None, streaming: bool = False,
-                   ) -> DockerJSONResponse:
+                   params: Optional[JsonDict] = None,
+                   json_body: Optional[JsonDict] = None,
+                   streaming: bool = False) -> DockerJSONResponse:
     """
     Helper method to perform a HTTP requests and handle responses from the
     Docker API.
     """
     async with ClientSession(connector=client.conn) as session:
         if method.upper() == "GET":
-            sess = session.get(uri, params=params)
+            sess = session.get(uri, params=params, json=json_body)
         elif method.upper() == "PUT":
-            sess = session.put(uri, params=params)
+            sess = session.put(uri, params=params, json=json_body)
         elif method.upper() == "POST":
-            sess = session.post(uri, params=params)
+            sess = session.post(uri, params=params, json=json_body)
         elif method.upper() == "DELETE":
-            sess = session.delete(uri, params=params)
+            sess = session.delete(uri, params=params, json=json_body)
         else:
             raise Exception("Unknown HTTP verb: %s" % method)
         async with sess as resp:
-            if resp.status == 200:
+            if resp.status in (200, 201):
                 if streaming:
                     statuses: List[str] = (await resp.text()).split("\r\n")
                     return [json.loads(i) for i in statuses if i != ""]
@@ -40,33 +41,36 @@ async def api_call(client: 'DockerClient', method: str, uri: str,
 
 
 async def api_get(client: 'DockerClient', uri: str,
-                  params: Optional[JsonDict] = None, streaming: bool = False,
-                  ) -> DockerJSONResponse:
+                  params: Optional[JsonDict] = None,
+                  json_body: Optional[JsonDict] = None,
+                  streaming: bool = False) -> DockerJSONResponse:
     """
     Helper method to perform a GET and handle responses from the Docker API.
     """
     return await api_call(client, "GET", uri, params=params,
-                          streaming=streaming)
+                          json_body=json_body, streaming=streaming)
 
 
 async def api_post(client: 'DockerClient', uri: str,
-                   params: Optional[JsonDict] = None, streaming: bool = False
-                   ) -> DockerJSONResponse:
+                   params: Optional[JsonDict] = None,
+                   json_body: Optional[JsonDict] = None,
+                   streaming: bool = False) -> DockerJSONResponse:
     """
     Helper method to perform a POST and handle responses from the Docker API.
     """
     return await api_call(client, "POST", uri, params=params,
-                          streaming=streaming)
+                          json_body=json_body, streaming=streaming)
 
 
 async def api_delete(client: 'DockerClient', uri: str,
-                     params: Optional[JsonDict] = None, streaming: bool = False
-                     ) -> DockerJSONResponse:
+                     params: Optional[JsonDict] = None,
+                     json_body: Optional[JsonDict] = None,
+                     streaming: bool = False) -> DockerJSONResponse:
     """
     Helper method to perform a DELETE and handle responses from the Docker API.
     """
     return await api_call(client, "DELETE", uri, params=params,
-                          streaming=streaming)
+                          json_body=json_body, streaming=streaming)
 
 
 def convert_bool(d: JsonDict) -> JsonDict:

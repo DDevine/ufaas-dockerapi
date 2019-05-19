@@ -2,7 +2,7 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .client import DockerClient
+    from ufaas_dockerapi.client import DockerClient
 
 
 class ExecAPIBase(ABC):

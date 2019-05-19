@@ -1,11 +1,11 @@
 from abc import ABC
 from typing import TYPE_CHECKING
 
-from .types import DockerJSONResponse
-from .utils import api_get
+from ufaas_dockerapi.types import DockerJSONResponse
+from ufaas_dockerapi.utils import api_get
 
 if TYPE_CHECKING:
-    from .client import DockerClient
+    from ufaas_dockerapi.client import DockerClient
 
 
 class SystemAPIBase(ABC):

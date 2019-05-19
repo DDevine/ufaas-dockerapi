@@ -1,6 +1,9 @@
+from dataclasses import asdict
+
 import pytest
 
 from ufaas_dockerapi.client import DockerClient, default_transport
+from ufaas_dockerapi.config import ContainerConfig, config_dict_factory
 
 
 @pytest.fixture
@@ -21,7 +24,7 @@ async def test_version(client):
 @pytest.mark.asyncio
 async def test_image_basics(client):
     """
-    Pull an image from Dockerhub.
+    Test create (pulling alpine from Dockerhub) and deletion of an image.
     """
     try:
         await client.image.pull("alpine", tag="3.8")  # 3.8 is small.
@@ -32,3 +35,34 @@ async def test_image_basics(client):
         await client.image.remove("alpine:3.8")
     except Exception as e:
         pytest.fail("Removing image 'alpine:3.8' failed: %s" % e)
+
+
+@pytest.mark.asyncio
+async def test_config_serialisation():
+    """
+    Test creation of basic config objects, and that they serialise to JSON.
+    """
+    config = ContainerConfig({
+        "image": "alpine:3.8"
+    })
+
+    try:
+        asdict(config, dict_factory=config_dict_factory)
+    except Exception as e:
+        pytest.fail("Config object serialisation failed: %s" % e)
+
+
+@pytest.mark.asyncio
+async def test_container_basic(client):
+    """
+    Test minimal container create and delete.
+    """
+    basic_config = ContainerConfig(**{
+        "image": "alpine:3.8"
+    })
+
+    try:
+        await client.image.pull("alpine", tag="3.8")  # 3.8 is small.
+        await client.container.create("test_container", basic_config)
+    except Exception as e:
+        pytest.fail("Pulling image 'alpine:3.8' failed: %s" % e)

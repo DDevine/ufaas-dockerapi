@@ -1,11 +1,12 @@
 from abc import ABC
 from typing import Optional, TYPE_CHECKING
 
-from .types import DockerJSONResponse
-from .utils import api_delete, api_post, convert_bool, strip_nulls
+from ufaas_dockerapi.types import DockerJSONResponse
+from ufaas_dockerapi.utils import (api_delete, api_post, convert_bool,
+                                   strip_nulls)
 
 if TYPE_CHECKING:
-    from .client import DockerClient
+    from ufaas_dockerapi.client import DockerClient
 
 
 class ImageAPIBase(ABC):
@@ -23,7 +24,7 @@ class ImageAPI(ImageAPIBase):
     """
     def __init__(self, client: 'DockerClient') -> None:
         super().__init__(client)
-        self._baseuri = "http://1.25"
+        self._baseuri = "http://1.25/images"
 
     async def pull(self, img_name: str, repo_uri: Optional[str] = None,
                    tag: Optional[str] = None,
@@ -38,7 +39,7 @@ class ImageAPI(ImageAPIBase):
                          "tag": tag, "platform": platform})
 
         return await api_post(self._client,
-                              "%s/images/create" % self._baseuri, params=d,
+                              "%s/create" % self._baseuri, params=d,
                               streaming=True)
 
     async def import_source(self, image_uri: str, repo_identifier: str,
@@ -60,7 +61,7 @@ class ImageAPI(ImageAPIBase):
                          "platform": platform})
 
         return await api_post(self._client,
-                              "%s/images/create" % self._baseuri, params=d,
+                              "%s/create" % self._baseuri, params=d,
                               streaming=True)
 
     async def remove(self, image: str, force: bool = False,
@@ -74,5 +75,5 @@ class ImageAPI(ImageAPIBase):
         d = convert_bool({"force": force, "noprune": noprune})
 
         return await api_delete(self._client,
-                                "%s/images/%s" % (self._baseuri, image),
+                                "%s/%s" % (self._baseuri, image),
                                 params=d, streaming=True)

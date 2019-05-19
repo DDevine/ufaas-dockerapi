@@ -18,6 +18,16 @@ INSTALL_REQUIRES = [
     'aiohttp==3.5.4'
 ]
 
+TEST_REQUIRES = INSTALL_REQUIRES + [
+    'pytest',
+    'pytest-asyncio',
+],
+
+# This means you can do pip install .[test] for testing deps.
+extras = {
+    "test": TEST_REQUIRES,
+}
+
 setup(
     name='ufaas_dockerapi',
     version="0.1.0",
@@ -39,8 +49,6 @@ of uFaaS.",
     ],
     packages=find_packages(exclude=["tests", "tests.*"]),
     install_requires=INSTALL_REQUIRES,
-    tests_require=INSTALL_REQUIRES + [
-        'pytest',
-        'pytest-asyncio',
-    ],
+    tests_require=TEST_REQUIRES,
+    extras_require=extras,
 )
