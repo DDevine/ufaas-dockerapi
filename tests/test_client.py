@@ -55,7 +55,7 @@ async def test_config_serialisation():
 @pytest.mark.asyncio
 async def test_container_basic(client):
     """
-    Test minimal container create and delete.
+    Test minimal container create and delete, requires an image creation too.
     """
     basic_config = ContainerConfig(**{
         "image": "alpine:3.8"
@@ -63,6 +63,15 @@ async def test_container_basic(client):
 
     try:
         await client.image.pull("alpine", tag="3.8")  # 3.8 is small.
+    except Exception as e:
+        pytest.fail("Pull of 'alpine:3.8' for container test failed: %s" % e)
+
+    try:
         await client.container.create("test_container", basic_config)
     except Exception as e:
-        pytest.fail("Pulling image 'alpine:3.8' failed: %s" % e)
+        pytest.fail("Creating container with alpine:3.8 failed: %s" % e)
+
+    try:
+        await client.container.delete("test_container", force_stop=True)
+    except Exception as e:
+        pytest.fail("Deleting 'test_container' failed: %s" % e)

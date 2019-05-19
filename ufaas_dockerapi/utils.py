@@ -29,7 +29,7 @@ async def api_call(client: 'DockerClient', method: str, uri: str,
         else:
             raise Exception("Unknown HTTP verb: %s" % method)
         async with sess as resp:
-            if resp.status in (200, 201):
+            if resp.status in (200, 201, 204):
                 if streaming:
                     statuses: List[str] = (await resp.text()).split("\r\n")
                     return [json.loads(i) for i in statuses if i != ""]
