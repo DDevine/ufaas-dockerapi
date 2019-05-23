@@ -7,7 +7,7 @@ or other config objects.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from ufaas_dockerapi.types import JsonDict # noqa: #F401
@@ -111,21 +111,41 @@ class ContainerConfig(ConfigBase):
     tty: Optional[bool] = None  # Default False
     open_stdin: Optional[bool] = None  # Default: False
     stdin_once: Optional[bool] = None  # Default: False
-    env: Dict[str, str] = field(default_factory=dict)
+    env: Dict[str, Union[str, int, float]] = field(default_factory=dict)
     cmd: List[str] = field(default_factory=list)
     health_check: Optional[HealthCheckConfig] = None
     volumes: Optional[Dict[Any, Any]] = None
     working_dir: Optional[str] = None
     entry_point: List[str] = field(default_factory=list)
-    network_disabled: Optional[bool] = None  # False
+    network_disabled: Optional[bool] = None  # Default: False
     mac_address: Optional[str] = None
     on_build: Optional[List[str]] = None
     labels: Optional['JsonDict'] = None
-    stop_signal: Optional[str] = None  # "SIGTERM"
-    stop_timeout: Optional[int] = None  # 10
+    stop_signal: Optional[str] = None  # Default: "SIGTERM"
+    stop_timeout: Optional[int] = None  # Default: 10
     shell: Optional[List[str]] = None
     host_config: Optional[HostConfig] = None
     network_config: Optional[NetworkConfig] = None
+
+
+@dataclass
+class ExecConfig(ConfigBase):
+    """
+    A class that represents Exec configuration. Similar, but different to
+    ContainerConfig.
+
+    `https://docs.docker.com/engine/api/v1.39/#operation/ContainerExec`
+    """
+    attach_stdin: Optional[bool] = None  # Default: False
+    attach_stdout: Optional[bool] = None  # Default: True
+    attach_stderr: Optional[bool] = None  # Default: True
+    detach_keysequence: Optional[str] = None  # Default: "ctrl-p,ctrl-q"
+    tty: Optional[bool] = None  # Default: False
+    env: Dict[str, Union[str, int, float]] = field(default_factory=dict)
+    cmd: List[str] = field(default_factory=list)
+    extended_privileges: Optional[bool] = None  # Default: False
+    container_user: Optional[str] = None
+    working_dir: Optional[str] = None
 
 
 def config_dict_factory(cfg: Any) -> 'JsonDict':

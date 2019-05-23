@@ -3,11 +3,21 @@ uFaaS Docker API
 
 :status: pre-alpha
 
-An asyncio/aiohttp based docker API client targeted at uFaaS use-cases.
-The official docker python API is not used because it is not async, and
-`aiodocker` is not used because it lacks `exec` support which is critical.
+An asyncio/aiohttp based Docker API.
 
-Setting labels will also be supported, as it is likely important to uFaaS.
+In contrast to some other client libraries this one aims to offer:
+
+* Async API.
+* Configuration objects rather than JSON.
+    - No camelcase keys.
+    - Development environment friendly.
+    - Makes usage more obvious.
+* Python type hinting.
+* Exec support.
+
+Support for other parts of the Docker API such as Networking and Docker Swarm
+support will be performed as uFaaS (eventually) requires them, or if patches
+are submitted.
 
 Basic Usage
 ------------

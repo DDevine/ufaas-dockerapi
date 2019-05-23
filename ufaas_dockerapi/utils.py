@@ -1,8 +1,9 @@
 import json
 from typing import List, Optional, TYPE_CHECKING
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientWebSocketResponse
 
+from ufaas_dockerapi.exceptions import DockerAPIException
 from ufaas_dockerapi.types import DockerJSONResponse, JsonDict
 
 if TYPE_CHECKING:
@@ -32,12 +33,16 @@ async def api_call(client: 'DockerClient', method: str, uri: str,
             if resp.status in (200, 201, 204):
                 if streaming:
                     statuses: List[str] = (await resp.text()).split("\r\n")
-                    return [json.loads(i) for i in statuses if i != ""]
+                    return (resp.status, [json.loads(i)
+                            for i in statuses if i != ""])
                 else:
-                    return await resp.json()
+                    if 'CONTENT-TYPE' in resp.headers:
+                        return (resp.status, await resp.json())
+                    else:
+                        return (resp.status, "")
 
             else:
-                raise Exception(await resp.json())
+                raise DockerAPIException(resp.status, await resp.json())
 
 
 async def api_get(client: 'DockerClient', uri: str,
@@ -71,6 +76,16 @@ async def api_delete(client: 'DockerClient', uri: str,
     """
     return await api_call(client, "DELETE", uri, params=params,
                           json_body=json_body, streaming=streaming)
+
+
+async def get_websocket(client: 'DockerClient',
+                        uri: str) -> ClientWebSocketResponse:
+    """
+    Returns a AIOHttp WebSocket object.
+    If you want query params you must build them and add them to the URI.
+    """
+    async with ClientSession(connector=client.conn) as session:
+        return await session.ws_connect(uri)
 
 
 def convert_bool(d: JsonDict) -> JsonDict:

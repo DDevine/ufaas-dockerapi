@@ -1,10 +1,11 @@
 # flake8: noqa
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
-JsonDict = Dict[str, Any]  # Apparently this is what Guido uses...
+JsonDict = Dict[str, Union[str, Any]]  # Union[str, Any] is a hack for mypy.
 
-# Docker sometimes returns streamed JSON.
-DockerJSONResponse = Union[List[JsonDict], JsonDict]
+DockerJSON = Union[List[JsonDict], JsonDict]
+# Docker sometimes returns streamed JSON. We also want the HTTP code as int.
+DockerJSONResponse = Tuple[int, DockerJSON]
 
 from ufaas_dockerapi.config import ConfigBase
 from ufaas_dockerapi.container import ContainerAPIBase

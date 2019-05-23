@@ -2,10 +2,12 @@ from abc import ABC
 from dataclasses import asdict
 from typing import Optional, TYPE_CHECKING
 
+from aiohttp import ClientWebSocketResponse
+
 from ufaas_dockerapi.config import ContainerConfig, config_dict_factory
 from ufaas_dockerapi.types import DockerJSONResponse
 from ufaas_dockerapi.utils import (api_delete, api_post, convert_bool,
-                                   strip_nulls)
+                                   get_websocket, strip_nulls)
 
 if TYPE_CHECKING:
     from ufaas_dockerapi.client import DockerClient
@@ -59,3 +61,69 @@ class ContainerAPI(ContainerAPIBase):
         return await api_delete(self._client,
                                 "%s/%s" % (self._baseuri, container), params=d,
                                 streaming=True)
+
+    async def start(self, container_name: str,
+                    detach_keysequence: Optional[str] = None
+                    ) -> DockerJSONResponse:
+        """
+        Start a Docker container.
+
+        `https://docs.docker.com/engine/api/v1.39/#operation/ContainerStart`
+        """
+        d = strip_nulls({"detachKeys": detach_keysequence})
+        return await api_post(self._client,
+                              "%s/%s/start" % (self._baseuri, container_name),
+                              params=d, streaming=False)
+
+    async def stop(self, container_name: str,
+                   timeout: Optional[int] = None) -> DockerJSONResponse:
+        """
+        Stop a Docker container.
+
+        `https://docs.docker.com/engine/api/v1.39/#operation/ContainerStop`
+        """
+        d = strip_nulls({"t": timeout})
+        return await api_post(self._client,
+                              "%s/%s/stop" % (self._baseuri, container_name),
+                              params=d, streaming=False)
+
+    async def restart(self, container_name: str,
+                      timeout: Optional[int] = None) -> DockerJSONResponse:
+        """
+        Restart a Docker container.
+
+        `https://docs.docker.com/engine/api/v1.39/#operation/ContainerRestart`
+        """
+        d = strip_nulls({"t": timeout})
+        uri = "%s/%s/restart" % (self._baseuri, container_name)
+        return await api_post(self._client, uri, params=d, streaming=False)
+
+    async def attach_websocket(self, container_name: str,
+                               detach_keysequence: Optional[str] = None,
+                               return_logs: Optional[bool] = None,
+                               return_stream: Optional[bool] = None,
+                               attach_stdin: Optional[bool] = None,
+                               attach_stdout: Optional[bool] = None,
+                               attach_stderr: Optional[bool] = None,
+                               ) -> ClientWebSocketResponse:
+        """
+        Returns an AIOHTTP websocket attached to the container.
+        """
+        # AIOHTTP doesn't support query parameters as an argument to
+        # ws_connect so we must build the URI with params ourselves.
+        params = convert_bool(strip_nulls({
+            "detachKeys": detach_keysequence,
+            "logs": return_logs,
+            "stream": return_stream,
+            "stdin": attach_stdin,
+            "stdout": attach_stdout,
+            "stderr": attach_stderr
+            }))
+
+        if len(params.keys()) > 0:
+            querystr = "?%s" % "&".join(["%s=%s" for k, v in params.items()])
+        else:
+            querystr = ""
+
+        uri = "%s/%s/attach/ws%s" % (self._baseuri, container_name, querystr)
+        return await get_websocket(self._client, uri)
