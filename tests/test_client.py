@@ -1,13 +1,10 @@
 from dataclasses import asdict
 
-from aiohttp import WSMsgType
-
 import pytest
 
 from ufaas_dockerapi.client import DockerClient, default_transport
 from ufaas_dockerapi.config import (ContainerConfig, ExecConfig,
                                     config_dict_factory)
-from ufaas_dockerapi.exceptions import DockerAPIException
 
 
 @pytest.fixture
@@ -25,9 +22,18 @@ async def alpine(client) -> None:
 
 @pytest.fixture
 async def alpine_container(client, alpine) -> None:
+    """
+    Alpine container created, but not started.
+    """
     config = {
         "image": "alpine:3.8",
-        "cmd": ["sleep", "30"]
+        "cmd": ["/bin/ash"],
+        "tty": False,
+        "attach_stdin": True,
+        "attach_stdout": True,
+        "attach_stderr": True,
+        "open_stdin": True,
+        "stdin_once": True
         }
 
     try:
@@ -38,6 +44,10 @@ async def alpine_container(client, alpine) -> None:
     await client.container.create(
             "alpine_container", ContainerConfig(**config)
             )
+
+
+@pytest.fixture
+async def alpine_container_started(client, alpine_container) -> None:
     await client.container.start("alpine_container")
 
 
@@ -103,36 +113,41 @@ async def test_container_basic(client, alpine):
 
 
 @pytest.mark.asyncio
-async def test_exec(client, alpine_container):
+async def test_exec(client, alpine_container_started):
     """
-    Test that an exec instance can be created and a hello world runs.
+    Test that an exec instance can be created and runs
     """
     exec_config = ExecConfig(**{
-        "cmd": ["sleep", "66"],
+        "cmd": ["echo", "hello world"],
+        "tty": True
     })
 
     try:
         status, _ = await client.exec.run("alpine_container", exec_config)
         assert status == 200
     except Exception as e:
-        pytest.fail("Exec date %s" % e)
+        pytest.fail("Exec test failed: %s" % e)
 
 
 @pytest.mark.asyncio
-async def test_websocket(client, alpine_container):
+async def test_websocket(client, alpine_container_started):
     """
     See if "hello world" is returned over websocket when echo "hello world" is
-    run with client.exec.run.
+    run.
     """
-    exec_config = ExecConfig(**{
-        "cmd": ["echo", "hello world"],
-    })
 
-    ws = await client.container.attach_websocket("alpine_container")
-    await client.exec.run("alpine_container", exec_config)
-    msg = await ws.receive()
-    # Keep trying to get data until socket closes...
-    while msg.type != WSMsgType.closed:
-        msg = await ws.receive()
+    ws_config = {
+        "return_stream": True,
+        "attach_stdout": True,
+        "attach_stderr": True,
+        "attach_stdin": True
+    }
 
-    assert "hello world" in msg.data
+    ws = await client.container.attach_websocket("alpine_container",
+                                                 **ws_config)
+
+    await ws.send_str('echo "hello world"\n')
+    output = await ws.receive()
+
+    assert "hello world" in "{}".format(output)
+    await ws.close()

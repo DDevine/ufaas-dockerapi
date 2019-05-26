@@ -1,7 +1,7 @@
 # flake8: noqa
 from typing import Any, Dict, List, Tuple, Union
 
-JsonDict = Dict[str, Union[str, Any]]  # Union[str, Any] is a hack for mypy.
+JsonDict = Dict[str, Any]
 
 DockerJSON = Union[List[JsonDict], JsonDict]
 # Docker sometimes returns streamed JSON. We also want the HTTP code as int.

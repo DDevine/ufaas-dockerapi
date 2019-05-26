@@ -12,8 +12,9 @@ In contrast to some other client libraries this one aims to offer:
     - No camelcase keys.
     - Development environment friendly.
     - Makes usage more obvious.
+* Object API in addition to a raw low-level Docker API.
 * Python type hinting.
-* Exec support.
+* Exec support, with WebSocket attachment.
 
 Support for other parts of the Docker API such as Networking and Docker Swarm
 support will be performed as uFaaS (eventually) requires them, or if patches

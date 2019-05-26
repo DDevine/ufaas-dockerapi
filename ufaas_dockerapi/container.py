@@ -28,7 +28,7 @@ class ContainerAPI(ContainerAPIBase):
     """
     def __init__(self, client: 'DockerClient') -> None:
         super().__init__(client)
-        self._baseuri = "http://1.25/containers"
+        self._baseuri = "http://v1.25/containers"
 
     async def create(self, container_name: str,
                      config: ContainerConfig) -> DockerJSONResponse:
@@ -114,16 +114,47 @@ class ContainerAPI(ContainerAPIBase):
         params = convert_bool(strip_nulls({
             "detachKeys": detach_keysequence,
             "logs": return_logs,
-            "stream": return_stream,
             "stdin": attach_stdin,
             "stdout": attach_stdout,
-            "stderr": attach_stderr
+            "stderr": attach_stderr,
+            "stream": return_stream
             }))
 
         if len(params.keys()) > 0:
-            querystr = "?%s" % "&".join(["%s=%s" for k, v in params.items()])
+            # Assemble query parameters into string.
+            p = ["%s=%s" % (k, v) for k, v in params.items()]
+            querystr = "?%s" % "&".join(p)
         else:
             querystr = ""
 
         uri = "%s/%s/attach/ws%s" % (self._baseuri, container_name, querystr)
         return await get_websocket(self._client, uri)
+
+
+class Container:
+    """
+    Represents a created container. API methods can be called with this object
+    providing a object-oriented interface.
+    """
+
+    def __init__(self, config: Optional[ContainerConfig] = None,
+                 created: bool = True, running: bool = False):
+        """
+        A container object configured based on the `config` object given.
+        `created` should be True if the container already exists in Docker.
+        `running` should be True if the container is already running in Docker.
+        """
+        self._created = created
+        self._running = running
+        self._config = config
+
+    async def create(self) -> None:
+        """
+        Create this container in Docker.
+        """
+        if not self._running and not self._created:
+            # Go forward.
+            pass
+        else:
+            # Should we raise exception here? Or no news is good news?
+            return

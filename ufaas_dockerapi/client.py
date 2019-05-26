@@ -1,5 +1,7 @@
 from typing import Optional, TYPE_CHECKING, Tuple
 
+from aiohttp import ClientSession
+
 from ufaas_dockerapi.config import AuthConfig
 from ufaas_dockerapi.transports import DockerSock
 from ufaas_dockerapi.types import (ContainerAPIType, ExecAPIType, ImageAPIType,
@@ -15,6 +17,7 @@ class DockerClient:
                  version: Tuple[int, int] = (1, 25)):
         self._version = version
         self._transport = transport
+        self._session = ClientSession(connector=self.conn)
 
         if version >= (1, 25):
             from .container import ContainerAPI

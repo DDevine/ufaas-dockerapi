@@ -111,12 +111,12 @@ class ContainerConfig(ConfigBase):
     tty: Optional[bool] = None  # Default False
     open_stdin: Optional[bool] = None  # Default: False
     stdin_once: Optional[bool] = None  # Default: False
-    env: Dict[str, Union[str, int, float]] = field(default_factory=dict)
+    env: Optional[Dict[str, Union[str, int, float]]] = None
     cmd: List[str] = field(default_factory=list)
     health_check: Optional[HealthCheckConfig] = None
     volumes: Optional[Dict[Any, Any]] = None
     working_dir: Optional[str] = None
-    entry_point: List[str] = field(default_factory=list)
+    entry_point: Optional[List[str]] = None
     network_disabled: Optional[bool] = None  # Default: False
     mac_address: Optional[str] = None
     on_build: Optional[List[str]] = None
@@ -167,7 +167,7 @@ def config_dict_factory(cfg: Any) -> 'JsonDict':
     out = dict({})
     for key, val in cfg:
         anyval: Any = None  # Deal with type conversions.
-        if key == "env":
+        if key == "env" and val is not None:
             # Build list of 'KEY=VAL'-like strings suitable for unix
             # environment variables.
             anyval = ["%s=%s" % (k, v) for k, v in val.items()]
@@ -177,5 +177,5 @@ def config_dict_factory(cfg: Any) -> 'JsonDict':
             out[DOCKER_KEYMAP[key]] = anyval
         except KeyError:
             # Attempt to automatically translate the key name.
-            out[" ".join(key.split("_")).title().strip(" ")] = anyval
+            out[" ".join(key.split("_")).title().replace(" ", "")] = anyval
     return out

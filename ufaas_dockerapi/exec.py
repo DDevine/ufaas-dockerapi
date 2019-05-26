@@ -34,7 +34,7 @@ class ExecAPI(ExecAPIBase):
         Performs a "docker exec". Note this only works with running containers.
         """
         _, res = await self.exec_create(container_name, config)
-        exec_id = res["Id"]
+        exec_id = res["Id"]  # type: ignore
         return await self.exec_start(exec_id, detach=detach, tty=tty)
 
     async def exec_create(self, container_name: str,
