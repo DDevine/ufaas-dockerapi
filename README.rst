@@ -35,3 +35,13 @@ Basic Usage
 
     # Pull alpine:3.8 from Docker Hub.
     loop.run_until_complete(client.image.pull("alpine", tag="3.8"))
+
+Running Tests
+---------------
+
+Tests depend on the current environment allowing connection to the Docker socket, and being allowed to manage Docker.
+
+::
+
+    $ pip install tox
+    $ tox
